@@ -106,8 +106,8 @@ loadBtn.addEventListener("click", async () => {
         loadBtn.classList.add("unvisible")
         iziToast.error({
                     message: "We're sorry, but you've reached the end of search results.",
-                    position: 'center',
-                    color: 'green',
+                    position: 'topRight',
+                    color: 'blue',
                     messageColor: "black",
                     close: true,
                     timeout: 2000,
