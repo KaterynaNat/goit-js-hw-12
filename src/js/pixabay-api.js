@@ -1,4 +1,4 @@
-"use strict"
+"use strict";
 import iziToast from "izitoast";
 import "izitoast/dist/css/iziToast.min.css";
 
@@ -7,37 +7,32 @@ import "simplelightbox/dist/simple-lightbox.min.css";
 
 import axios from 'axios';
 
-
-import { createGallery } from './render-function'
-
+import { createGallery } from './render-function';
 
 const API_KEY = "46809908-9f97c0ef37b027eaa1f813844";
-const loader = document.querySelector('.loader'); 
+const loader = document.querySelector('.loader');
 const gallery = document.querySelector(".gallery-list");
-const loadBtn = document.querySelector('.load-btn')
+const loadBtn = document.querySelector('.load-btn');
 
 let page = 1;
 let lightbox;
-let totalPage;
-
-
-
+let totalHits = 0; 
+let loadedImagesCount = 0; 
 
 export function searchImage() {
     page = 1;
+    loadedImagesCount = 0;
 
     loader.classList.remove('unvisible');
     loadBtn.classList.add('unvisible');
 
     gallery.innerHTML = "";
-    
-    createList()
+
+    createList();
 }
 
 async function createList() {
-    
-
-        let params = new URLSearchParams({
+    let params = new URLSearchParams({
         key: API_KEY,
         q: `${localStorage.getItem("search")}`,
         image_type: "photo",
@@ -45,11 +40,14 @@ async function createList() {
         safesearch: true,
         per_page: 15,
         page: page,
-    })
+    });
+
     await axios.get(`https://pixabay.com/api/?${params}`)
         .then(data => {
-            totalPage = Math.round(data.data.totalHits / 15) ;
-            if (data.data.hits.length == 0) {
+            totalHits = data.data.totalHits; 
+            const currentHits = data.data.hits.length;
+
+            if (currentHits === 0) {
                 loader.classList.add('unvisible');
                 iziToast.error({
                     message: 'Sorry, there are no images matching your search query. Please try again!',
@@ -63,11 +61,29 @@ async function createList() {
                     icon: false,
                     maxWidth: "300"
                 });
-            }
-            else {
+            } else {
                 loader.classList.add('unvisible');
                 gallery.insertAdjacentHTML("beforeend", createGallery(data.data.hits));
-                loadBtn.classList.remove('unvisible');
+                loadedImagesCount += currentHits;
+
+
+                if (loadedImagesCount >= totalHits) {
+                    loadBtn.classList.add("unvisible");
+                    iziToast.error({
+                        message: "We're sorry, but you've reached the end of search results.",
+                        position: 'topRight',
+                        color: 'blue',
+                        messageColor: "black",
+                        close: true,
+                        timeout: 2000,
+                        progressBar: true,
+                        iconColor: "white",
+                        icon: false,
+                        maxWidth: "300"
+                    });
+                } else {
+                    loadBtn.classList.remove('unvisible');
+                }
             }
         })
         .catch(error => {
@@ -83,8 +99,9 @@ async function createList() {
                 iconColor: "white",
                 icon: false,
                 maxWidth: "300"
-            })
-        })
+            });
+        });
+
     lightbox = new SimpleLightbox('.gallery-item a', {
         disableScroll: false,
         overlayOpacity: 0.9,
@@ -92,38 +109,38 @@ async function createList() {
     });
 }
 
-
 loadBtn.addEventListener("click", async () => {
-    loader.classList.remove('unvisible');
-    loadBtn.classList.add("unvisible")
-
-    lightbox.destroy()
-    page++;
-
-    await createList()
-    
-    if (page > totalPage) { 
-        loadBtn.classList.add("unvisible")
+   
+    if (loadedImagesCount >= totalHits) {
+        loadBtn.classList.add("unvisible");
         iziToast.error({
-                    message: "We're sorry, but you've reached the end of search results.",
-                    position: 'topRight',
-                    color: 'blue',
-                    messageColor: "black",
-                    close: true,
-                    timeout: 2000,
-                    progressBar: true,
-                    iconColor: "white",
-                    icon: false,
-                    maxWidth: "300"
+            message: "We're sorry, but you've reached the end of search results.",
+            position: 'topRight',
+            color: 'blue',
+            messageColor: "black",
+            close: true,
+            timeout: 2000,
+            progressBar: true,
+            iconColor: "white",
+            icon: false,
+            maxWidth: "300"
         });
+        return;
     }
 
+    loader.classList.remove('unvisible');
+    loadBtn.classList.add("unvisible");
 
-    const item = document.querySelector(".gallery-item")
+    lightbox.destroy();
+    page++;
+
+    await createList();
+
+    const item = document.querySelector(".gallery-item");
     const itemHeight = item.getBoundingClientRect().height;
     window.scrollBy({
         left: 0,
         top: itemHeight * 2,
         behavior: "smooth"
-    })   
-})
+    });
+});
