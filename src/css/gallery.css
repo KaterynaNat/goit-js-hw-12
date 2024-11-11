@@ -20,7 +20,7 @@
     height: 38px;
     padding: 0;
     outline: none;
-    border: 1px solid #808080;
+    border: 1px solid #ffffff;
     padding-left: 16px;
     background-color: transparent;
     transition: all 250ms ease-in-out;
@@ -28,7 +28,7 @@
 
 .input:hover,
 .input:focus {
-    border: 1px solid #6c6b6b;
+    border: 1px solid #fafafa;
 }
 
 .input:focus-within {
